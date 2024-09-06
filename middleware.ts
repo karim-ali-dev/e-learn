@@ -1,24 +1,27 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// تحديد المسارات العامة التي يجب أن تكون متاحة للجميع
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)']);
+const isPublicRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/webhook',
+  '/api/uploadthing(.*)', // تأكد من أن المسارات العامة محددة بشكل صحيح
+]);
 
 export default clerkMiddleware((auth, request) => {
-  // إذا كان المسار عامًا، نسمح بالوصول إلى المسار
-  if (isPublicRoute(request)) {
-    return;
-  }
+  const url = request.nextUrl.pathname;
+  console.log('Request path:', url); // تسجيل المسار
 
-  // حماية المسارات التي ليست عامة
-  auth().protect();
+  if (!isPublicRoute(request)) {
+    console.log('Protecting route:', url); // سجل المسار المحمي
+    auth().protect();
+  } else {
+    console.log('Public route:', url); // سجل المسار العام
+  }
 });
 
 export const config = {
   matcher: [
-    // تشمل جميع المسارات التي تحتاج إلى حماية
-    
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // تشمل مسارات API وtrpc
-    '/(api|trpc)(.*)',
+    '/api/(.*)', // تأكد من تضمين جميع مسارات API هنا
   ],
 };
